@@ -1,6 +1,6 @@
 # wonderai
 
-A new Flutter project.
+An Ai image generation app using Dalle2/Midjourney as an api service and firebase as backend
 
 ## Getting Started
 
