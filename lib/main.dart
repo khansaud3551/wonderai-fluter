@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:splashscreen/splashscreen.dart';
+//import Splash2 from splashscreen.dart
+import 'package:wonderai/splashscreen.dart';
 import "package:flutter/src/rendering/box.dart";
 import 'package:carousel_slider/carousel_slider.dart';
 
@@ -38,13 +39,36 @@ class SecondScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.green,
-        //turn off the shadow
+        backgroundColor: Colors.white,
+
+        //box shadow
         elevation: 0.0,
-        leading: Container(
-          width: 100.0,
-          child: Image.asset("assets/logo2.png"), // Logo
-        ), // Logo
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              width: 70.0,
+              height: 60.0,
+              child: Image.asset("assets/logo2.png"),
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 18.0, vertical: 7.0),
+              decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.all(Radius.circular(10.0))),
+              child: Text(
+                "Pro",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        // Logo
         actions: [
           IconButton(
             color: Colors.black,
@@ -54,48 +78,88 @@ class SecondScreen extends StatelessWidget {
         ],
       ),
       body: // create a row with two text widgets
-          Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text("Add Your Photo +"),
-          Text("I need help inspiration"),
-        ]),
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          UserPrompt(),
-        ]),
-        Container(
-          width: double.infinity,
-          child: Row(children: [
-            Text("Aspect Ratio : "),
-            AspectRatio(),
-          ]),
-        ),
-        Container(
-          child: Row(children: [
-            ImageSlider(),
-          ]),
-        )
-      ]),
+          Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text("Add Your Photo +"),
+                          Text("I need help inspiration"),
+                        ]),
+                    SizedBox(height: 10),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          UserPrompt(),
+                        ]),
+                    SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      child: Row(children: [
+                        Text("Aspect Ratio : "),
+                        AspectRatio(),
+                      ]),
+                    ),
+                    SizedBox(height: 10),
+                    Container(
+                      child: Row(children: [
+                        ImageSlider(),
+                      ]),
+                    ),
+                    SizedBox(height: 10),
+                    // Full width button
+                    Container(
+                      width: double.infinity,
+                      color: Colors.transparent,
+                      child: OutlinedButton.icon(
+                          onPressed: () {},
+                          //styles for the button
+                          style: OutlinedButton.styleFrom(
+                            primary: Colors.white,
+                            //add padding to the button
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 15, vertical: 10),
+                            backgroundColor: Colors.black,
+                            side: BorderSide(color: Colors.black, width: 0),
+                            shape: const RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(10))),
+                          ),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Create')),
+                    ),
+                    SizedBox(height: 10),
+
+                    Container(
+                        width: double.infinity,
+                        color: Colors.transparent,
+                        child: Column(
+                          children: [
+                            Row(
+                              //background color
+
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                //heading bold with text Prompt
+                                Text(
+                                  "Prompt Inspirations",
+                                  style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Text("Feed"),
+                              ],
+                            )
+                          ],
+                        )),
+
+                    // Full width button 3
+                  ])),
 
       //Input box for the user to enter the text
-    );
-  }
-}
-
-class Splash2 extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return SplashScreen(
-      seconds: 6,
-      navigateAfterSeconds: new SecondScreen(),
-      // title: new Text(
-      //   'GeeksForGeeks',
-      //   textScaleFactor: 2,
-      // ),
-
-      image: Image.asset('assets/logo.png'),
-      // loadingText: Text("Loading"),
-      photoSize: 100.0,
-      // loaderColor: Colors.blue,
     );
   }
 }
@@ -263,9 +327,6 @@ class ImageSlider extends StatelessWidget {
     ));
   }
 }
-
-
-
 
 // class ImageSlider extends StatelessWidget {
 //   @override
