@@ -89,7 +89,9 @@ class SecondScreen extends StatelessWidget {
                           Text("Add Your Photo +"),
                           Text("I need help inspiration"),
                         ]),
+
                     SizedBox(height: 10),
+
                     Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -103,7 +105,9 @@ class SecondScreen extends StatelessWidget {
                         AspectRatio(),
                       ]),
                     ),
+
                     SizedBox(height: 10),
+
                     Container(
                       child: Row(children: [
                         ImageSlider(),
@@ -119,7 +123,6 @@ class SecondScreen extends StatelessWidget {
                           //styles for the button
                           style: OutlinedButton.styleFrom(
                             primary: Colors.white,
-                            //add padding to the button
                             padding: EdgeInsets.symmetric(
                                 horizontal: 15, vertical: 10),
                             backgroundColor: Colors.black,
@@ -131,6 +134,7 @@ class SecondScreen extends StatelessWidget {
                           icon: const Icon(Icons.add),
                           label: const Text('Create')),
                     ),
+
                     SizedBox(height: 10),
 
                     Container(
@@ -139,11 +143,8 @@ class SecondScreen extends StatelessWidget {
                         child: Column(
                           children: [
                             Row(
-                              //background color
-
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                //heading bold with text Prompt
                                 Text(
                                   "Prompt Inspirations",
                                   style: TextStyle(
@@ -155,11 +156,7 @@ class SecondScreen extends StatelessWidget {
                             )
                           ],
                         )),
-
-                    // Full width button 3
                   ])),
-
-      //Input box for the user to enter the text
     );
   }
 }
