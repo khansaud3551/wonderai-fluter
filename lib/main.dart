@@ -328,6 +328,18 @@ class ImageSlider extends StatelessWidget {
   }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 // class ImageSlider extends StatelessWidget {
 //   @override
 //   Widget build(BuildContext context) {
