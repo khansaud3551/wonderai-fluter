@@ -1,9 +1,12 @@
 import 'dart:async';
+//import http package
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-//import Splash2 from splashscreen.dart
+import 'package:wonderai/ImageResult.dart';
 import 'package:wonderai/splashscreen.dart';
 import "package:flutter/src/rendering/box.dart";
 import 'package:carousel_slider/carousel_slider.dart';
+import 'dart:convert';
 
 final List<String> imgList = [
   'https://images.unsplash.com/photo-1520342868574-5fa3804e551c?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=6ff92caffcdd63681a35134a6770ed3b&auto=format&fit=crop&w=1951&q=80',
@@ -13,6 +16,57 @@ final List<String> imgList = [
   'https://images.unsplash.com/photo-1508704019882-f9cf40e475b4?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=8c6e5e3aba713b17aa1fe71ab4f0ae5b&auto=format&fit=crop&w=1352&q=80',
   'https://images.unsplash.com/photo-1519985176271-adb1088fa94c?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=a0c8d632e977f94e5d312d9893258f59&auto=format&fit=crop&w=1355&q=80'
 ];
+
+Future<String> generateImage() async {
+  //test the funtion call by pint text in console
+
+  var data = {
+    "prompt": "A photo of a lizzard on a rock",
+    "n": 1,
+    "size": "256x256",
+  };
+
+  print("generateImage() called");
+  String url = "https://api.openai.com/v1/images/generations";
+  Uri uri = Uri.parse(url);
+  final res = await http.post(uri,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization":
+            "Bearer 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"
+      },
+      body: jsonEncode(data));
+
+  if (res.statusCode == 200) {
+    var jsonResponse = jsonDecode(res.body);
+    print(jsonResponse);
+    return jsonResponse['data'][0]['url'];
+  } else {
+    throw Exception("Failed to generate image");
+  }
+}
+
+// Future<String> generateImage() async {
+//     String apikey = 'tsk-nTRcf1113XPQht7r22T3Bvadapavlb5kFJYz1yz5b4xifuyzpoiyom2ooNIQehy';
+//   String url = 'https://api.openai.com/v1/images/generations';
+//     var data ={
+//         "prompt": "A photo of a dog",
+//         "n": 1,
+//         "size": "256x256",
+//       };
+
+//       var res = await http.post(Uri.parse(url),
+//           headers: {"Authorization":"Bearer ${apikey}","Content-Type": "application/json"},
+//           body:jsonEncode(data));
+//       var jsonResponse = jsonDecode(res.body);
+//       image = jsonResponse['data'][0]['url'];
+//       setState(() {
+//       });
+
+//     }else{
+//       print("Enter something");
+//     }
+// }
 
 void main() {
   runApp(MyApp());
@@ -24,7 +78,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Splash Screen',
       theme: ThemeData(
-        primarySwatch: Colors.green,
+        primarySwatch: Colors.red,
         backgroundColor: Colors.white,
       ),
       home: Splash2(),
@@ -119,7 +173,30 @@ class SecondScreen extends StatelessWidget {
                       width: double.infinity,
                       color: Colors.transparent,
                       child: OutlinedButton.icon(
-                          onPressed: () {},
+                          onPressed: () async {
+                            String image = await generateImage();
+                            Navigator.of(context).push(
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        NewPage(image: image, key: Key(image)),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  var begin = Offset(1.0, 0.0);
+                                  var end = Offset.zero;
+                                  var curve = Curves.ease;
+
+                                  var tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
+
+                                  return SlideTransition(
+                                    position: animation.drive(tween),
+                                    child: child,
+                                  );
+                                },
+                              ),
+                            );
+                          },
                           //styles for the button
                           style: OutlinedButton.styleFrom(
                             primary: Colors.white,
