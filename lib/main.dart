@@ -7,7 +7,9 @@ import 'package:wonderai/ImageResult.dart';
 import 'package:wonderai/splashscreen.dart';
 import "package:flutter/src/rendering/box.dart";
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 final List<String> imgList = [
   'https://images.unsplash.com/photo-1520342868574-5fa3804e551c?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=6ff92caffcdd63681a35134a6770ed3b&auto=format&fit=crop&w=1951&q=80',
@@ -17,6 +19,8 @@ final List<String> imgList = [
   'https://images.unsplash.com/photo-1508704019882-f9cf40e475b4?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=8c6e5e3aba713b17aa1fe71ab4f0ae5b&auto=format&fit=crop&w=1352&q=80',
   'https://images.unsplash.com/photo-1519985176271-adb1088fa94c?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=a0c8d632e977f94e5d312d9893258f59&auto=format&fit=crop&w=1355&q=80'
 ];
+
+final firestore = FirebaseFirestore.instance;
 
 Future<String> generateImage(
   //accept prompt as parameter
@@ -50,7 +54,9 @@ Future<String> generateImage(
   }
 }
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(MyApp());
 }
 
@@ -79,6 +85,23 @@ class SecondScreen extends StatefulWidget {
 }
 
 class _SecondScreenState extends State<SecondScreen> {
+  List<String> images = [];
+
+  @override
+  void initState() {
+    super.initState();
+    //fetch the data from firestore
+    firestore.collection("images").get().then((value) {
+      value.docs.forEach((element) {
+        images.add(element.data()['image_url']);
+      });
+      setState(() {
+        images = images;
+      });
+      print("images: $images");
+    });
+  }
+
   @override
   //   @override
   Widget build(BuildContext context) {
@@ -151,7 +174,9 @@ class _SecondScreenState extends State<SecondScreen> {
                                   });
                                 },
                               ),
-                              Text(widget.inputData)
+                              // Text(widget.inputData)
+                              //images array
+                              // Text("images: $images")
                             ],
                           ),
                         ]),
@@ -233,9 +258,25 @@ class _SecondScreenState extends State<SecondScreen> {
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                Text("Feed"),
+                                //render all the images from the firestore
                               ],
-                            )
+                            ),
+                            Container(
+                              height: 300,
+                              //space between the images and the button
+
+                              width: double.infinity,
+                              child: GridView.builder(
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 2),
+                                  itemCount: images.length,
+                                  itemBuilder: (context, index) {
+                                    return Container(
+                                      child: Image.network(images[index]),
+                                    );
+                                  }),
+                            ),
                           ],
                         )),
                   ])),

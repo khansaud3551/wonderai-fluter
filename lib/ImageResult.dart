@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+//import firebase storage
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:io';
+
+final firestore = FirebaseFirestore.instance;
 
 class NewPage extends StatelessWidget {
   final String image;
@@ -29,6 +34,29 @@ class NewPage extends StatelessWidget {
               child: Text('Go back!'),
               onPressed: () {
                 Navigator.pop(context);
+              },
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            ElevatedButton(
+              child: Text(
+                'Publish ',
+                style: TextStyle(color: Colors.white),
+              ),
+              // color: Colors.black,
+              onPressed: () async {
+                //save the image to firestore database
+                await firestore.collection("images").add({
+                  "image_url": image,
+                });
+                //when the image is saved to the database, show a snackbar
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                        'Image Saved in database please restart the app to see the image on home page'),
+                  ),
+                );
               },
             ),
           ],

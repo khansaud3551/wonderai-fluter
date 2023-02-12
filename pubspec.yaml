@@ -7,9 +7,14 @@ environment:
   sdk: ">=2.18.2 <3.0.0"
 
 dependencies:
+  firebase_core:
+
   flutter:
     sdk: flutter
   carousel_slider: ^4.2.1
+  # firebase_storage: ^11.0.11
+  firebase_database:
+  cloud_firestore:
 
   cupertino_icons: ^1.0.2
   splashscreen:
