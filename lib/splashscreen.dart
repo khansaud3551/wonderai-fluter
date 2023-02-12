@@ -9,7 +9,9 @@ class Splash2 extends StatelessWidget {
   Widget build(BuildContext context) {
     return SplashScreen(
       seconds: 6,
-      navigateAfterSeconds: new SecondScreen(),
+      navigateAfterSeconds: new SecondScreen(
+        inputData: "",
+      ),
       // title: new Text(
       //   'GeeksForGeeks',
       //   textScaleFactor: 2,

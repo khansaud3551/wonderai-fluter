@@ -1,25 +1,5 @@
 import 'package:flutter/material.dart';
 
-// class NewPage extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         backgroundColor: Colors.black,
-//         title: Text('New Page'),
-//       ),
-//       body: Center(
-//         child: ElevatedButton(
-//           child: Text('Go back!'),
-//           onPressed: () {
-//             Navigator.pop(context);
-//           },
-//         ),
-//       ),
-//     );
-//   }
-// }
-
 class NewPage extends StatelessWidget {
   final String image;
 

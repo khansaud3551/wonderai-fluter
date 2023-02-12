@@ -2,6 +2,7 @@ import 'dart:async';
 //import http package
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:splashscreen/splashscreen.dart';
 import 'package:wonderai/ImageResult.dart';
 import 'package:wonderai/splashscreen.dart';
 import "package:flutter/src/rendering/box.dart";
@@ -17,11 +18,14 @@ final List<String> imgList = [
   'https://images.unsplash.com/photo-1519985176271-adb1088fa94c?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=a0c8d632e977f94e5d312d9893258f59&auto=format&fit=crop&w=1355&q=80'
 ];
 
-Future<String> generateImage() async {
+Future<String> generateImage(
+  //accept prompt as parameter
+  String inputData,
+) async {
   //test the funtion call by pint text in console
 
   var data = {
-    "prompt": "A photo of a lizzard on a rock",
+    "prompt": inputData,
     "n": 1,
     "size": "256x256",
   };
@@ -46,28 +50,6 @@ Future<String> generateImage() async {
   }
 }
 
-// Future<String> generateImage() async {
-//     String apikey = 'tsk-nTRcf1113XPQht7r22T3Bvadapavlb5kFJYz1yz5b4xifuyzpoiyom2ooNIQehy';
-//   String url = 'https://api.openai.com/v1/images/generations';
-//     var data ={
-//         "prompt": "A photo of a dog",
-//         "n": 1,
-//         "size": "256x256",
-//       };
-
-//       var res = await http.post(Uri.parse(url),
-//           headers: {"Authorization":"Bearer ${apikey}","Content-Type": "application/json"},
-//           body:jsonEncode(data));
-//       var jsonResponse = jsonDecode(res.body);
-//       image = jsonResponse['data'][0]['url'];
-//       setState(() {
-//       });
-
-//     }else{
-//       print("Enter something");
-//     }
-// }
-
 void main() {
   runApp(MyApp());
 }
@@ -87,8 +69,18 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class SecondScreen extends StatelessWidget {
+class SecondScreen extends StatefulWidget {
+  String inputData;
+
+  SecondScreen({required this.inputData});
+
   @override
+  _SecondScreenState createState() => _SecondScreenState();
+}
+
+class _SecondScreenState extends State<SecondScreen> {
+  @override
+  //   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -149,7 +141,19 @@ class SecondScreen extends StatelessWidget {
                     Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          UserPrompt(),
+                          Column(
+                            children: [
+                              UserPrompt(
+                                inputData: widget.inputData,
+                                onInputDataChanged: (newInputData) {
+                                  setState(() {
+                                    widget.inputData = newInputData;
+                                  });
+                                },
+                              ),
+                              Text(widget.inputData)
+                            ],
+                          ),
                         ]),
                     SizedBox(height: 10),
                     Container(
@@ -174,7 +178,8 @@ class SecondScreen extends StatelessWidget {
                       color: Colors.transparent,
                       child: OutlinedButton.icon(
                           onPressed: () async {
-                            String image = await generateImage();
+                            String image =
+                                await generateImage(widget.inputData);
                             Navigator.of(context).push(
                               PageRouteBuilder(
                                 pageBuilder:
@@ -239,24 +244,27 @@ class SecondScreen extends StatelessWidget {
 }
 
 class UserPrompt extends StatefulWidget {
+  final String inputData;
+  final Function(String) onInputDataChanged;
+
+  UserPrompt({required this.inputData, required this.onInputDataChanged});
+
   @override
   _UserPromptState createState() => _UserPromptState();
 }
 
 class _UserPromptState extends State<UserPrompt> {
-  TextEditingController _textEditingController = TextEditingController();
-  String inputText = "";
+  final _controller = TextEditingController();
 
   @override
-  void dispose() {
-    _textEditingController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _controller.text = widget.inputData;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
+    return Container(
         constraints: BoxConstraints(
           minHeight: 100,
           maxHeight: 100,
@@ -265,46 +273,23 @@ class _UserPromptState extends State<UserPrompt> {
           border: Border.all(color: Colors.black),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Stack(
+        width: 365,
+        child: Column(
           children: [
             TextField(
-              controller: _textEditingController,
+              controller: _controller,
               maxLines: 2,
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: "Line 1\nLine 2",
                 hintMaxLines: 2,
               ),
-              onChanged: (value) {
-                setState(() {
-                  inputText = value;
-                  print(inputText);
-                });
+              onChanged: (newInputData) {
+                widget.onInputDataChanged(newInputData);
               },
             ),
-            Positioned(
-              right: 7,
-              bottom: 7,
-              child: Container(
-                height: 20,
-                width: 20,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.close,
-                    color: Colors.grey[600],
-                    size: 14,
-                  ),
-                ),
-              ),
-            ),
           ],
-        ),
-      ),
-    );
+        ));
   }
 }
 
@@ -372,7 +357,7 @@ class ImageSlider extends StatelessWidget {
     return Expanded(
         child: CarouselSlider(
       options: CarouselOptions(
-        height: 150.0,
+        height: 100.0,
         aspectRatio: 16 / 9,
         viewportFraction: 0.33,
         initialPage: 0,
@@ -401,18 +386,6 @@ class ImageSlider extends StatelessWidget {
     ));
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 // class ImageSlider extends StatelessWidget {
 //   @override
@@ -496,6 +469,74 @@ class ImageSlider extends StatelessWidget {
 //             ),
 //           ),
 //         ],
+//       ),
+//     );
+//   }
+// }
+
+
+// class UserPrompt extends StatelessWidget {
+//   final TextEditingController inputData;
+//   final Function(String) onDataChanged;
+
+//   UserPrompt({this.inputData, this.onDataChanged});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Expanded(
+//       child: Container(
+//         constraints: BoxConstraints(
+//           minHeight: 100,
+//           maxHeight: 100,
+//         ),
+//         decoration: BoxDecoration(
+//           border: Border.all(color: Colors.black),
+//           borderRadius: BorderRadius.circular(10),
+//         ),
+//         child: Stack(
+//           children: [
+// TextField(
+//   controller: inputData,
+//   onChanged: (newValue) {
+//     onDataChanged(newValue);
+//   },
+// ),
+// TextField(
+//   controller: _textEditingController,
+//   maxLines: 2,
+//   decoration: InputDecoration(
+//     border: InputBorder.none,
+//     hintText: "Line 1\nLine 2",
+//     hintMaxLines: 2,
+//   ),
+//   onChanged: (value) {
+//     setState(() {
+//       inputText = value;
+//       print(inputText);
+//     });
+//   },
+// ),
+//             Positioned(
+//               right: 7,
+//               bottom: 7,
+//               child: Container(
+//                 height: 20,
+//                 width: 20,
+//                 decoration: BoxDecoration(
+//                   shape: BoxShape.circle,
+//                   color: Colors.white,
+//                 ),
+//                 child: Center(
+//                   child: Icon(
+//                     Icons.close,
+//                     color: Colors.grey[600],
+//                     size: 14,
+//                   ),
+//                 ),
+//               ),
+//             ),
+//           ],
+//         ),
 //       ),
 //     );
 //   }
