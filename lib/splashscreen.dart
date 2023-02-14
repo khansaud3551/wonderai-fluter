@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:splashscreen/splashscreen.dart';
-//import main.dart
-import 'package:wonderai/main.dart';
+//import second screen
+import "package:wonderai/second_screen.dart";
 
 class Splash2 extends StatelessWidget {
   @override
@@ -12,6 +12,7 @@ class Splash2 extends StatelessWidget {
       navigateAfterSeconds: new SecondScreen(
         inputData: "",
       ),
+
       // title: new Text(
       //   'GeeksForGeeks',
       //   textScaleFactor: 2,

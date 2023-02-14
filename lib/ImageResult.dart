@@ -6,9 +6,9 @@ import 'dart:io';
 final firestore = FirebaseFirestore.instance;
 
 class NewPage extends StatelessWidget {
-  final String image;
+  final String imageUrl;
 
-  NewPage({required Key key, required this.image}) : super(key: key);
+  NewPage({required Key key, required this.imageUrl}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +23,7 @@ class NewPage extends StatelessWidget {
               height: 300,
               width: double.infinity,
               child: Image.network(
-                image,
+                imageUrl,
                 // fit: BoxFit.cover,
               ),
             ),
@@ -33,7 +33,7 @@ class NewPage extends StatelessWidget {
             ElevatedButton(
               child: Text('Go back!'),
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pushReplacementNamed(context, '/second');
               },
             ),
             SizedBox(
@@ -46,9 +46,9 @@ class NewPage extends StatelessWidget {
               ),
               // color: Colors.black,
               onPressed: () async {
-                //save the image to firestore database
+                //save the imageUrl to firestore database
                 await firestore.collection("images").add({
-                  "image_url": image,
+                  "image_url": imageUrl,
                 });
                 //when the image is saved to the database, show a snackbar
                 ScaffoldMessenger.of(context).showSnackBar(
