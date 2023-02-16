@@ -2,10 +2,8 @@ import 'dart:async';
 //import http package
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:splashscreen/splashscreen.dart';
 import 'package:wonderai/ImageResult.dart';
-import 'package:wonderai/splashscreen.dart';
-import "package:flutter/src/rendering/box.dart";
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'dart:convert';
@@ -22,42 +20,129 @@ final List<String> imgList = [
 
 final firestore = FirebaseFirestore.instance;
 
-Future<String> generateImage(
-  //accept prompt as parameter
-  String inputData,
-) async {
+// Future<String> generateImage(
+//   //accept prompt as parameter
+//   String inputData,
+// ) async {
+//   var data = {
+//     "prompt": inputData,
+//     "n": 1,
+//     "size": "256x256",
+//     "response_format": "b64_json"
+//   };
+
+//   print("generateImage() called");
+//   String url = "https://api.openai.com/v1/images/generations";
+//   Uri uri = Uri.parse(url);
+//   final res = await http.post(uri,
+//       //modal
+
+//       headers: {
+//         "Content-Type": "application/json",
+//         "Authorization":
+//             "Bearer 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"
+//       },
+//       body: jsonEncode(data));
+
+//   if (res.statusCode == 200) {
+//     var jsonResponse = jsonDecode(res.body);
+
+//     // Save image to Firebase Storage and Firestore
+//     FirebaseStorage storage = FirebaseStorage.instance;
+//     Reference storageRef =
+//         storage.ref().child('images').child('generated_image.png');
+//     http.Response imageResponse = await http.get(Uri.parse(imageUrl));
+//     final bytes = imageResponse.bodyBytes;
+//     await storageRef.putData(bytes, SettableMetadata(contentType: 'image/png'));
+
+//     DocumentReference documentRef =
+//         FirebaseFirestore.instance.collection('images').doc();
+//     await documentRef.set({
+//       'url': imageUrl,
+//       'storagePath': storageRef.fullPath,
+//       'createdAt': FieldValue.serverTimestamp(),
+//     });
+
+//     print(jsonResponse);
+//     return jsonResponse['data'][0]['url'];
+//   } else {
+//     throw Exception("Failed to generate image");
+//   }
+// }
+
+Future<String> generateImage(String inputData) async {
+  // Initialize Firebase
+  await Firebase.initializeApp();
+
+  // Check if there is a current user
+  // var user = FirebaseAuth.instance.currentUser;
+  // if (user == null) {
+  //   //sihn in
+  //   await FirebaseAuth.instance.signInAnonymously();
+  // }
+
+  // Generate OpenAI image
+  var image = await fetchImages(inputData);
+
+  //download the image from the URL
+  var imageBytes = await http.get(Uri.parse(image));
+  //save the image to firebase storage
+  var storage = FirebaseStorage.instance;
+  var uniqueIdentifier = DateTime.now().millisecondsSinceEpoch.toString();
+  var storageRef = storage
+      .ref()
+      .child('images')
+      .child('generated_image_$uniqueIdentifier.png');
+  await storageRef.putData(
+      imageBytes.bodyBytes, SettableMetadata(contentType: 'image/png'));
+  //save the image URL to firestore
+  var documentRef = firestore.collection('images').doc();
+  await documentRef.set({
+    'url': image,
+    'storagePath': storageRef.fullPath,
+    'createdAt': FieldValue.serverTimestamp(),
+  });
+
+  return image;
+}
+
+//make async function to fetch data from firestore
+Future<String> fetchImages(inputData) async {
+  print("fetchImages() called");
+  var apiUrl = 'https://api.openai.com/v1/images/generations';
+  var prompt = inputData;
+  var apiKey = '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';
   var data = {
-    "prompt": inputData,
-    "n": 1,
-    "size": "256x256",
+    // 'model': 'image-alpha-001',
+    'prompt': prompt,
+    'num_images': 1,
+    'size': '256x256',
+    'response_format': 'url'
   };
 
-  print("generateImage() called");
-  String url = "https://api.openai.com/v1/images/generations";
-  Uri uri = Uri.parse(url);
-  final res = await http.post(uri,
-      //modal
-
+  var response = await http.post(Uri.parse(apiUrl),
       headers: {
-        "Content-Type": "application/json",
-        "Authorization":
-            "Bearer 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"
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $apiKey'
       },
-      body: jsonEncode(data));
+      body: json.encode(data));
 
-  if (res.statusCode == 200) {
-    var jsonResponse = jsonDecode(res.body);
-    print(jsonResponse);
-    return jsonResponse['data'][0]['url'];
+  if (response.statusCode == 200) {
+    var responseData = json.decode(response.body);
+    var imageUrl = responseData['data'][0]['url'];
+
+    // var imageResponse = await http.get(Uri.parse(imageUrl));
+    // print(imageUrl);
+    return imageUrl;
   } else {
-    throw Exception("Failed to generate image");
+    throw Exception('Failed to generate image: ${response.statusCode}');
   }
 }
 
 class SecondScreen extends StatefulWidget {
   String inputData;
 
-  SecondScreen({required this.inputData});
+  SecondScreen({super.key, required this.inputData});
 
   @override
   _SecondScreenState createState() => _SecondScreenState();
@@ -69,15 +154,27 @@ class _SecondScreenState extends State<SecondScreen> {
   @override
   void initState() {
     super.initState();
-    //fetch the data from firestore
-    firestore.collection("images").get().then((value) {
-      value.docs.forEach((element) {
-        images.add(element.data()['image_url']);
-      });
-      setState(() {
-        images = images;
-      });
-      print("images: $images");
+    _fetchImages();
+  }
+
+  void _fetchImages() async {
+    // Get a reference to the storage service
+    final FirebaseStorage storage = FirebaseStorage.instance;
+
+    // Get a reference to the folder in storage where the images are stored
+    final ref = storage.ref().child('images');
+
+    // Get a list of all files in the folder
+    var imagesList = await ref.listAll();
+
+    // Get the URL for each image
+    for (var image in imagesList.items) {
+      var imageUrl = await image.getDownloadURL();
+      images.add(imageUrl);
+    }
+    //update the UI
+    setState(() {
+      images = images;
     });
   }
 
@@ -94,17 +191,18 @@ class _SecondScreenState extends State<SecondScreen> {
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
+              SizedBox(
                 width: 70.0,
                 height: 60.0,
                 child: Image.asset("assets/logo2.png"),
               ),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 18.0, vertical: 7.0),
-                decoration: BoxDecoration(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18.0, vertical: 7.0),
+                decoration: const BoxDecoration(
                     color: Colors.black,
                     borderRadius: BorderRadius.all(Radius.circular(10.0))),
-                child: Text(
+                child: const Text(
                   "Pro",
                   style: TextStyle(
                     color: Colors.white,
@@ -120,7 +218,7 @@ class _SecondScreenState extends State<SecondScreen> {
           actions: [
             IconButton(
               color: Colors.black,
-              icon: Icon(Icons.person),
+              icon: const Icon(Icons.person),
               onPressed: () {}, // Add your desired behavior for the user icon
             ),
           ],
@@ -128,18 +226,18 @@ class _SecondScreenState extends State<SecondScreen> {
         body: // create a row with two text widgets
             SingleChildScrollView(
           child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
+                        children: const [
                           Text("Add Your Photo +"),
                           Text("I need help inspiration"),
                         ]),
 
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -159,31 +257,28 @@ class _SecondScreenState extends State<SecondScreen> {
                         // Text("images: $images")
                       ],
                     ),
-                    SizedBox(height: 10),
-                    Container(
+                    const SizedBox(height: 10),
+                    SizedBox(
                       width: double.infinity,
-                      child: Row(children: [
+                      child: Row(children: const [
                         Text("Aspect Ratio : "),
                         AspectRatio(),
                       ]),
                     ),
 
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
-                    Container(
-                      child: Row(children: [
-                        ImageSlider(),
-                      ]),
-                    ),
-                    SizedBox(height: 10),
+                    Row(children: const [
+                      ImageSlider(),
+                    ]),
+                    const SizedBox(height: 10),
                     // Full width button
                     Container(
                       width: double.infinity,
                       color: Colors.transparent,
                       child: OutlinedButton.icon(
                           onPressed: () async {
-                            String imageUrl =
-                                await generateImage(widget.inputData);
+                            var imageUrl = await fetchImages(widget.inputData);
                             Navigator.of(context).push(
                               PageRouteBuilder(
                                 pageBuilder:
@@ -193,7 +288,7 @@ class _SecondScreenState extends State<SecondScreen> {
                                             key: Key(imageUrl)),
                                 transitionsBuilder: (context, animation,
                                     secondaryAnimation, child) {
-                                  var begin = Offset(1.0, 0.0);
+                                  var begin = const Offset(1.0, 0.0);
                                   var end = Offset.zero;
                                   var curve = Curves.ease;
 
@@ -211,10 +306,11 @@ class _SecondScreenState extends State<SecondScreen> {
                           //styles for the button
                           style: OutlinedButton.styleFrom(
                             primary: Colors.white,
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 horizontal: 15, vertical: 10),
                             backgroundColor: Colors.black,
-                            side: BorderSide(color: Colors.black, width: 0),
+                            side:
+                                const BorderSide(color: Colors.black, width: 0),
                             shape: const RoundedRectangleBorder(
                                 borderRadius:
                                     BorderRadius.all(Radius.circular(10))),
@@ -223,7 +319,7 @@ class _SecondScreenState extends State<SecondScreen> {
                           label: const Text('Create')),
                     ),
 
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
                     Container(
                         width: double.infinity,
@@ -232,7 +328,7 @@ class _SecondScreenState extends State<SecondScreen> {
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
+                              children: const [
                                 Text(
                                   "Prompt Inspirations",
                                   style: TextStyle(
@@ -242,7 +338,7 @@ class _SecondScreenState extends State<SecondScreen> {
                                 //render all the images from the firestore
                               ],
                             ),
-                            Container(
+                            SizedBox(
                               // height: 300,
                               //space between the images and the button
 
@@ -250,13 +346,11 @@ class _SecondScreenState extends State<SecondScreen> {
                               height: MediaQuery.of(context).size.height - 500,
                               child: GridView.builder(
                                   gridDelegate:
-                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
                                           crossAxisCount: 2),
                                   itemCount: images.length,
                                   itemBuilder: (context, index) {
-                                    return Container(
-                                      child: Image.network(images[index]),
-                                    );
+                                    return Image.network(images[index]);
                                   }),
                             ),
                           ],
@@ -270,7 +364,8 @@ class UserPrompt extends StatefulWidget {
   final String inputData;
   final Function(String) onInputDataChanged;
 
-  UserPrompt({required this.inputData, required this.onInputDataChanged});
+  const UserPrompt(
+      {super.key, required this.inputData, required this.onInputDataChanged});
 
   @override
   _UserPromptState createState() => _UserPromptState();
@@ -288,7 +383,7 @@ class _UserPromptState extends State<UserPrompt> {
   @override
   Widget build(BuildContext context) {
     return Container(
-        constraints: BoxConstraints(
+        constraints: const BoxConstraints(
           minHeight: 100,
           maxHeight: 100,
         ),
@@ -301,7 +396,7 @@ class _UserPromptState extends State<UserPrompt> {
             TextField(
               controller: _controller,
               maxLines: 2,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 border: InputBorder.none,
                 hintText: "Line 1\nLine 2",
                 hintMaxLines: 2,
@@ -317,7 +412,7 @@ class _UserPromptState extends State<UserPrompt> {
 
 //testing
 class AspectRatio extends StatefulWidget {
-  AspectRatio({Key? key}) : super(key: key);
+  const AspectRatio({Key? key}) : super(key: key);
   @override
   State<AspectRatio> createState() => _AspectRatioState();
 }
@@ -332,12 +427,6 @@ class _AspectRatioState extends State<AspectRatio> {
           value = index;
         });
       },
-      child: Text(
-        text,
-        style: TextStyle(
-          color: (value == index) ? Colors.green : Colors.black,
-        ),
-      ),
       style: OutlinedButton.styleFrom(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
@@ -345,35 +434,41 @@ class _AspectRatioState extends State<AspectRatio> {
         side: BorderSide(
           color: (value == index) ? Colors.green : Colors.black,
         ),
-        minimumSize: Size(70, 30),
+        minimumSize: const Size(70, 30),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: (value == index) ? Colors.green : Colors.black,
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            margin: EdgeInsets.only(right: 10),
-            child: CustomRadioButton("1", 1),
-          ),
-          Container(
-            margin: EdgeInsets.only(right: 10),
-            child: CustomRadioButton("12", 2),
-          ),
-          Container(
-            child: CustomRadioButton("123", 3),
-          ),
-        ],
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(right: 10),
+          child: CustomRadioButton("1", 1),
+        ),
+        Container(
+          margin: const EdgeInsets.only(right: 10),
+          child: CustomRadioButton("12", 2),
+        ),
+        Container(
+          child: CustomRadioButton("123", 3),
+        ),
+      ],
     );
   }
 }
 
 class ImageSlider extends StatelessWidget {
+  const ImageSlider({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Expanded(
@@ -395,9 +490,9 @@ class ImageSlider extends StatelessWidget {
       ),
       items: imgList
           .map((item) => Container(
-                margin: EdgeInsets.all(5.0),
+                margin: const EdgeInsets.all(5.0),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                  borderRadius: const BorderRadius.all(Radius.circular(5.0)),
                   child: Image.network(
                     item,
                     fit: BoxFit.cover,

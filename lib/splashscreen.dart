@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:splashscreen/splashscreen.dart';
 //import second screen
@@ -9,7 +8,7 @@ class Splash2 extends StatelessWidget {
   Widget build(BuildContext context) {
     return SplashScreen(
       seconds: 6,
-      navigateAfterSeconds: new SecondScreen(
+      navigateAfterSeconds: SecondScreen(
         inputData: "",
       ),
 
