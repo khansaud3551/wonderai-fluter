@@ -113,7 +113,13 @@ class _SecondScreenState extends State<SecondScreen> {
     }
   }
 
+  void updateImagesList() {
+    // Fetch the latest list of images and update the state
+    _fetchImages();
+  }
+
   void _fetchImages() async {
+    print("_fetchImages() called");
     //set the loading state
     setState(() {
       isLoading = true;
@@ -272,6 +278,7 @@ class _SecondScreenState extends State<SecondScreen> {
                                   imageUrl: imageUrl,
                                   //is the image loading
                                   images: images,
+                                  updateImagesList: updateImagesList,
 
                                   //the list of images
                                 ),

@@ -46,13 +46,27 @@ Future<String> generateImage(imageUrl) async {
   return imageUrl;
 }
 
-class NewPage extends StatelessWidget {
+class NewPage extends StatefulWidget {
   final String imageUrl;
-  // final bool isLoading;
   final List images;
+  //funciton updateImagesList
+  final Function updateImagesList;
 
-  NewPage({required Key key, required this.imageUrl, required this.images})
+  NewPage(
+      {required Key key,
+      required this.imageUrl,
+      required this.images,
+      required this.updateImagesList})
       : super(key: key);
+
+  @override
+  _NewPageState createState() => _NewPageState();
+}
+
+class _NewPageState extends State<NewPage> {
+  bool isLoading = false;
+  // String imageUrl = ;
+  List images = [];
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +78,10 @@ class NewPage extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                   image: DecorationImage(
-                      image: NetworkImage(imageUrl), fit: BoxFit.fill)),
+                      image: NetworkImage(
+                        widget.imageUrl,
+                      ),
+                      fit: BoxFit.fill)),
             ),
           ),
           Expanded(
@@ -77,7 +94,13 @@ class NewPage extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.pop(context);
+                        //go back t homepage with updated list
+                        setState(() {
+                          images.add(widget.imageUrl);
+                        });
+
+                        // widget.updateImagesList();
+                        Navigator.pop(context, images);
                       },
                       child: const Text('Go back!'),
                     ),
@@ -86,9 +109,12 @@ class NewPage extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                        await generateImage(imageUrl);
+                        await generateImage(widget.imageUrl);
+                        widget.updateImagesList();
                         //update the UI
-                        // setState(() {
+                        setState(() {
+                          images.add(widget.imageUrl);
+                        });
 
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
