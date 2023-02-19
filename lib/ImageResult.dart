@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 //import firebase storage
@@ -9,7 +11,7 @@ final firestore = FirebaseFirestore.instance;
 
 Future<String> generateImage(imageUrl) async {
   // Initialize Firebase
-  print("image url called");
+  print("image url called $imageUrl");
   await Firebase.initializeApp();
   // Check if there is a current user
   // var user = FirebaseAuth.instance.currentUser;
@@ -32,76 +34,86 @@ Future<String> generateImage(imageUrl) async {
   await storageRef.putData(
       imageBytes.bodyBytes, SettableMetadata(contentType: 'image/png'));
   //save the image URL to firestore
-  var documentRef = firestore.collection('images').doc();
-  await documentRef.set({
-    'url': imageUrl,
-    // add the text prompt along with the image
-    'prompt': "test",
-    'storagePath': storageRef.fullPath,
-    'createdAt': FieldValue.serverTimestamp(),
-  });
+  // var documentRef = firestore.collection('images').doc();
+  // await documentRef.set({
+  //   'url': imageUrl,
+  //   // add the text prompt along with the image
+  //   'prompt': "test",
+  //   'storagePath': storageRef.fullPath,
+  //   'createdAt': FieldValue.serverTimestamp(),
+  // });
 
   return imageUrl;
 }
 
 class NewPage extends StatelessWidget {
   final String imageUrl;
+  // final bool isLoading;
+  final List images;
 
-  NewPage({required Key key, required this.imageUrl}) : super(key: key);
-
-  //inot state print the image url
-  void initState() {
-    print("image url is $imageUrl");
-  }
+  NewPage({required Key key, required this.imageUrl, required this.images})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          children: [
-            const SizedBox(
-              height: 200,
+      body: Column(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Container(
+              decoration: BoxDecoration(
+                  image: DecorationImage(
+                      image: NetworkImage(imageUrl), fit: BoxFit.fill)),
             ),
-            SizedBox(
-              height: 300,
-              width: double.infinity,
-              child: Image.network(
-                imageUrl,
-                // fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            ElevatedButton(
-              child: const Text('Go back!'),
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/second');
-              },
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            ElevatedButton(
-              child: const Text(
-                'Publish ',
-                style: TextStyle(color: Colors.white),
-              ),
-              // color: Colors.black,
-              onPressed: () async {
-                //save the imageUrl to realtime database
-                await generateImage(imageUrl);
-                //when the image is saved to the database, show a snackbar
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Image Saved in database'),
+          ),
+          Expanded(
+            flex: 1,
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Go back!'),
+                    ),
                   ),
-                );
-              },
+                  SizedBox(width: 16), // add space between buttons
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        await generateImage(imageUrl);
+                        //update the UI
+                        // setState(() {
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Image saved in database'),
+                          ),
+                        );
+                      },
+                      child: Text('Save Image'),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+          // Expanded(
+          //   flex: 1,
+          //   child: Center(
+          //     child: isLoading
+          //         ? const CircularProgressIndicator(
+          //             color: Colors.black,
+          //           )
+          //         : Text(isLoading ? "Loading" : "not loading"),
+          //   ),
+          // ),
+        ],
       ),
     );
   }

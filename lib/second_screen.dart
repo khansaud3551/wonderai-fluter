@@ -20,129 +20,41 @@ final List<String> imgList = [
 
 final firestore = FirebaseFirestore.instance;
 
-// Future<String> generateImage(
-//   //accept prompt as parameter
-//   String inputData,
-// ) async {
-//   var data = {
-//     "prompt": inputData,
-//     "n": 1,
-//     "size": "256x256",
-//     "response_format": "b64_json"
-//   };
+// Future<String> generateImage(String inputData) async {
+//   // Initialize Firebase
+//   await Firebase.initializeApp();
 
-//   print("generateImage() called");
-//   String url = "https://api.openai.com/v1/images/generations";
-//   Uri uri = Uri.parse(url);
-//   final res = await http.post(uri,
-//       //modal
+//   // Generate OpenAI image
+//   var image = await fetchImages(inputData);
 
-//       headers: {
-//         "Content-Type": "application/json",
-//         "Authorization":
-//             "Bearer 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"
-//       },
-//       body: jsonEncode(data));
+//   //download the image from the URL
+//   var imageBytes = await http.get(Uri.parse(image));
+//   //save the image to firebase storage
+//   var storage = FirebaseStorage.instance;
+//   var uniqueIdentifier = DateTime.now().millisecondsSinceEpoch.toString();
+//   var storageRef = storage
+//       .ref()
+//       .child('images')
+//       .child('generated_image_$uniqueIdentifier.png');
+//   await storageRef.putData(
+//       imageBytes.bodyBytes, SettableMetadata(contentType: 'image/png'));
+//   //save the image URL to firestore
+//   var documentRef = firestore.collection('images').doc();
+//   await documentRef.set({
+//     'url': image,
+//     'storagePath': storageRef.fullPath,
+//     'createdAt': FieldValue.serverTimestamp(),
+//   });
 
-//   if (res.statusCode == 200) {
-//     var jsonResponse = jsonDecode(res.body);
-
-//     // Save image to Firebase Storage and Firestore
-//     FirebaseStorage storage = FirebaseStorage.instance;
-//     Reference storageRef =
-//         storage.ref().child('images').child('generated_image.png');
-//     http.Response imageResponse = await http.get(Uri.parse(imageUrl));
-//     final bytes = imageResponse.bodyBytes;
-//     await storageRef.putData(bytes, SettableMetadata(contentType: 'image/png'));
-
-//     DocumentReference documentRef =
-//         FirebaseFirestore.instance.collection('images').doc();
-//     await documentRef.set({
-//       'url': imageUrl,
-//       'storagePath': storageRef.fullPath,
-//       'createdAt': FieldValue.serverTimestamp(),
-//     });
-
-//     print(jsonResponse);
-//     return jsonResponse['data'][0]['url'];
-//   } else {
-//     throw Exception("Failed to generate image");
-//   }
+//   return image;
 // }
 
-Future<String> generateImage(String inputData) async {
-  // Initialize Firebase
-  await Firebase.initializeApp();
-
-  // Check if there is a current user
-  // var user = FirebaseAuth.instance.currentUser;
-  // if (user == null) {
-  //   //sihn in
-  //   await FirebaseAuth.instance.signInAnonymously();
-  // }
-
-  // Generate OpenAI image
-  var image = await fetchImages(inputData);
-
-  //download the image from the URL
-  var imageBytes = await http.get(Uri.parse(image));
-  //save the image to firebase storage
-  var storage = FirebaseStorage.instance;
-  var uniqueIdentifier = DateTime.now().millisecondsSinceEpoch.toString();
-  var storageRef = storage
-      .ref()
-      .child('images')
-      .child('generated_image_$uniqueIdentifier.png');
-  await storageRef.putData(
-      imageBytes.bodyBytes, SettableMetadata(contentType: 'image/png'));
-  //save the image URL to firestore
-  var documentRef = firestore.collection('images').doc();
-  await documentRef.set({
-    'url': image,
-    'storagePath': storageRef.fullPath,
-    'createdAt': FieldValue.serverTimestamp(),
-  });
-
-  return image;
-}
-
 //make async function to fetch data from firestore
-Future<String> fetchImages(inputData) async {
-  print("fetchImages() called");
-  var apiUrl = 'https://api.openai.com/v1/images/generations';
-  var prompt = inputData;
-  var apiKey = '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';
-  var data = {
-    // 'model': 'image-alpha-001',
-    'prompt': prompt,
-    'num_images': 1,
-    'size': '256x256',
-    'response_format': 'url'
-  };
-
-  var response = await http.post(Uri.parse(apiUrl),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $apiKey'
-      },
-      body: json.encode(data));
-
-  if (response.statusCode == 200) {
-    var responseData = json.decode(response.body);
-    var imageUrl = responseData['data'][0]['url'];
-
-    // var imageResponse = await http.get(Uri.parse(imageUrl));
-    // print(imageUrl);
-    return imageUrl;
-  } else {
-    throw Exception('Failed to generate image: ${response.statusCode}');
-  }
-}
 
 class SecondScreen extends StatefulWidget {
   String inputData;
 
-  SecondScreen({super.key, required this.inputData});
+  SecondScreen({Key? key, required this.inputData}) : super(key: key);
 
   @override
   _SecondScreenState createState() => _SecondScreenState();
@@ -150,14 +62,63 @@ class SecondScreen extends StatefulWidget {
 
 class _SecondScreenState extends State<SecondScreen> {
   List<String> images = [];
+  String generatedImage = '';
+  bool isLoading = false;
 
+  //when the context pops up, this function is called
   @override
   void initState() {
+    print("initState() called");
     super.initState();
     _fetchImages();
   }
 
+  Future<String> fetchImages(inputData) async {
+    print("fetchImages() called");
+    setState(() {
+      isLoading = true;
+    });
+    var apiUrl = 'https://api.openai.com/v1/images/generations';
+    var prompt = inputData;
+    var apiKey = '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';
+    var data = {
+      // 'model': 'image-alpha-001',
+      'prompt': prompt,
+      'num_images': 1,
+      'size': '256x256',
+      'response_format': 'url'
+    };
+
+    var response = await http.post(Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey'
+        },
+        body: json.encode(data));
+
+    if (response.statusCode == 200) {
+      var responseData = json.decode(response.body);
+      var imageUrl = responseData['data'][0]['url'];
+
+      // var imageResponse = await http.get(Uri.parse(imageUrl));
+      // print(imageUrl);
+      setState(() {
+        isLoading = false;
+        generatedImage = imageUrl;
+      });
+      print(generatedImage + " generatedImage");
+      return imageUrl;
+    } else {
+      throw Exception('Failed to generate image: ${response.statusCode}');
+    }
+  }
+
   void _fetchImages() async {
+    //set the loading state
+    setState(() {
+      isLoading = true;
+    });
+
     // Get a reference to the storage service
     final FirebaseStorage storage = FirebaseStorage.instance;
 
@@ -172,11 +133,15 @@ class _SecondScreenState extends State<SecondScreen> {
       var imageUrl = await image.getDownloadURL();
       images.add(imageUrl);
     }
+
     //update the UI
     setState(() {
       images = images;
+      isLoading = false;
     });
   }
+
+  // rest of the code
 
   @override
   //   @override
@@ -197,6 +162,7 @@ class _SecondScreenState extends State<SecondScreen> {
                 child: Image.asset("assets/logo2.png"),
               ),
               Container(
+                // width: double.infinity,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 18.0, vertical: 7.0),
                 decoration: const BoxDecoration(
@@ -235,6 +201,7 @@ class _SecondScreenState extends State<SecondScreen> {
                         children: const [
                           Text("Add Your Photo +"),
                           Text("I need help inspiration"),
+                          //button on press  await fetchImages(widget.inputData);
                         ]),
 
                     const SizedBox(height: 10),
@@ -268,8 +235,9 @@ class _SecondScreenState extends State<SecondScreen> {
 
                     const SizedBox(height: 10),
 
-                    Row(children: const [
+                    Row(children: [
                       ImageSlider(),
+                      Text(isLoading ? "Loading..." : "false"),
                     ]),
                     const SizedBox(height: 10),
                     // Full width button
@@ -279,13 +247,34 @@ class _SecondScreenState extends State<SecondScreen> {
                       child: OutlinedButton.icon(
                           onPressed: () async {
                             var imageUrl = await fetchImages(widget.inputData);
+                            //route to new page without animation
+                            // Navigator.of(context).push(
+                            //   MaterialPageRoute(
+                            //     builder: (context) => NewPage(
+                            //       //key
+                            //       key: const Key('newPage'),
+                            //       imageUrl: imageUrl,
+                            //       //is the image loading
+                            //       isLoading: isLoading,
+
+                            //       //the list of images
+                            //     ),
+                            //   ),
+                            // );
+
                             Navigator.of(context).push(
                               PageRouteBuilder(
                                 pageBuilder:
                                     (context, animation, secondaryAnimation) =>
                                         NewPage(
-                                            imageUrl: imageUrl,
-                                            key: Key(imageUrl)),
+                                  //key
+                                  key: const Key('newPage'),
+                                  imageUrl: imageUrl,
+                                  //is the image loading
+                                  images: images,
+
+                                  //the list of images
+                                ),
                                 transitionsBuilder: (context, animation,
                                     secondaryAnimation, child) {
                                   var begin = const Offset(1.0, 0.0);
