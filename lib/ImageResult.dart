@@ -1,5 +1,5 @@
+import 'dart:convert';
 import 'dart:math';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 //import firebase storage
@@ -9,45 +9,42 @@ import 'package:http/http.dart' as http;
 
 final firestore = FirebaseFirestore.instance;
 
-Future<String> generateImage(imageUrl) async {
+Future<String> generateImage(String imageUrl, String prompt) async {
   // Initialize Firebase
   print("image url called $imageUrl");
   await Firebase.initializeApp();
-  // Check if there is a current user
-  // var user = FirebaseAuth.instance.currentUser;
-  // if (user == null) {
-  //   //sihn in
-  //   await FirebaseAuth.instance.signInAnonymously();
-  // }
-
-  // Generate OpenAI image
 
   //download the image from the URL
   var imageBytes = await http.get(Uri.parse(imageUrl));
-  //save the image to firebase storage
+
+  // Encode the prompt as a JSON string
+  var data = {
+    'prompt': prompt,
+  };
+  var promptJson = jsonEncode(data);
+
+  //save the image and prompt to firebase storage
   var storage = FirebaseStorage.instance;
   var uniqueIdentifier = DateTime.now().millisecondsSinceEpoch.toString();
   var storageRef = storage
       .ref()
       .child('images')
       .child('generated_image_$uniqueIdentifier.png');
+  // put the text prompt in the metadata
   await storageRef.putData(
-      imageBytes.bodyBytes, SettableMetadata(contentType: 'image/png'));
-  //save the image URL to firestore
-  // var documentRef = firestore.collection('images').doc();
-  // await documentRef.set({
-  //   'url': imageUrl,
-  //   // add the text prompt along with the image
-  //   'prompt': "test",
-  //   'storagePath': storageRef.fullPath,
-  //   'createdAt': FieldValue.serverTimestamp(),
-  // });
+      imageBytes.bodyBytes,
+      SettableMetadata(contentType: 'image/png', customMetadata: {
+        'prompt': prompt,
+      }));
+  // await storageRef.putData(
+  //     imageBytes.bodyBytes, SettableMetadata(contentType: 'image/png'));
 
   return imageUrl;
 }
 
 class NewPage extends StatefulWidget {
   final String imageUrl;
+  final String inputData;
   final List images;
   //funciton updateImagesList
   final Function updateImagesList;
@@ -55,6 +52,7 @@ class NewPage extends StatefulWidget {
   NewPage(
       {required Key key,
       required this.imageUrl,
+      required this.inputData,
       required this.images,
       required this.updateImagesList})
       : super(key: key);
@@ -109,7 +107,7 @@ class _NewPageState extends State<NewPage> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                        await generateImage(widget.imageUrl);
+                        await generateImage(widget.imageUrl, widget.inputData);
                         widget.updateImagesList();
                         //update the UI
                         setState(() {

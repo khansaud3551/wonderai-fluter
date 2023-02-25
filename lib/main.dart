@@ -18,10 +18,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Splash Screen',
-      theme: ThemeData(
-        primarySwatch: Colors.red,
-        backgroundColor: Colors.white,
-      ),
+      theme: ThemeData(fontFamily: "Poppins"),
       //make routes
       // home: Splash2(),
       routes: {

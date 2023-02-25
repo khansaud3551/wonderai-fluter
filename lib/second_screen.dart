@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:wonderai/ImageResult.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -20,37 +19,6 @@ final List<String> imgList = [
 
 final firestore = FirebaseFirestore.instance;
 
-// Future<String> generateImage(String inputData) async {
-//   // Initialize Firebase
-//   await Firebase.initializeApp();
-
-//   // Generate OpenAI image
-//   var image = await fetchImages(inputData);
-
-//   //download the image from the URL
-//   var imageBytes = await http.get(Uri.parse(image));
-//   //save the image to firebase storage
-//   var storage = FirebaseStorage.instance;
-//   var uniqueIdentifier = DateTime.now().millisecondsSinceEpoch.toString();
-//   var storageRef = storage
-//       .ref()
-//       .child('images')
-//       .child('generated_image_$uniqueIdentifier.png');
-//   await storageRef.putData(
-//       imageBytes.bodyBytes, SettableMetadata(contentType: 'image/png'));
-//   //save the image URL to firestore
-//   var documentRef = firestore.collection('images').doc();
-//   await documentRef.set({
-//     'url': image,
-//     'storagePath': storageRef.fullPath,
-//     'createdAt': FieldValue.serverTimestamp(),
-//   });
-
-//   return image;
-// }
-
-//make async function to fetch data from firestore
-
 class SecondScreen extends StatefulWidget {
   String inputData;
 
@@ -61,8 +29,9 @@ class SecondScreen extends StatefulWidget {
 }
 
 class _SecondScreenState extends State<SecondScreen> {
-  List<String> images = [];
+  List<Map<String, String>> fetchedImages = [];
   String generatedImage = '';
+  String fetchedPrompt = '';
   bool isLoading = false;
 
   //when the context pops up, this function is called
@@ -100,8 +69,6 @@ class _SecondScreenState extends State<SecondScreen> {
       var responseData = json.decode(response.body);
       var imageUrl = responseData['data'][0]['url'];
 
-      // var imageResponse = await http.get(Uri.parse(imageUrl));
-      // print(imageUrl);
       setState(() {
         isLoading = false;
         generatedImage = imageUrl;
@@ -120,7 +87,12 @@ class _SecondScreenState extends State<SecondScreen> {
 
   void _fetchImages() async {
     print("_fetchImages() called");
-    //set the loading state
+
+//empty the list
+    setState(() {
+      fetchedImages = [];
+    });
+
     setState(() {
       isLoading = true;
     });
@@ -134,225 +106,360 @@ class _SecondScreenState extends State<SecondScreen> {
     // Get a list of all files in the folder
     var imagesList = await ref.listAll();
 
-    // Get the URL for each image
+    // Get the URL and metadata for each image
     for (var image in imagesList.items) {
       var imageUrl = await image.getDownloadURL();
-      images.add(imageUrl);
+
+      // Get the metadata for the image
+      var metadata = await image.getMetadata();
+      var prompt = metadata.customMetadata?['prompt'];
+
+      print("prompt: $prompt");
+
+      // Create a map with image URL and prompt
+      var imageData = {
+        'url': imageUrl,
+        'prompt': prompt ?? '',
+      };
+
+      // Add the image data to the fetchedImages list
+      setState(() {
+        fetchedImages = [...fetchedImages, imageData];
+      });
     }
+
+    print(fetchedImages);
 
     //update the UI
     setState(() {
-      images = images;
       isLoading = false;
     });
   }
-
   // rest of the code
 
   @override
   //   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
 
-          //box shadow
-          elevation: 0.0,
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SizedBox(
-                width: 70.0,
-                height: 60.0,
-                child: Image.asset("assets/logo2.png"),
-              ),
-              Container(
-                // width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18.0, vertical: 7.0),
-                decoration: const BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.all(Radius.circular(10.0))),
-                child: const Text(
-                  "Pro",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
+        //box shadow
+        elevation: 0.0,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            SizedBox(
+              width: 70.0,
+              height: 60.0,
+              child: Image.asset("assets/logo2.png"),
+            ),
+            Container(
+              // width: double.infinity,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 15.0, vertical: 7.0),
+              decoration: const BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.all(Radius.circular(10.0))),
+              child: const Text(
+                "Pro",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ],
-          ),
-
-          // Logo
-          actions: [
-            IconButton(
-              color: Colors.black,
-              icon: const Icon(Icons.person),
-              onPressed: () {}, // Add your desired behavior for the user icon
             ),
           ],
         ),
-        body: // create a row with two text widgets
-            SingleChildScrollView(
-          child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+
+        // Logo
+        actions: [
+          IconButton(
+            color: Colors.black,
+            icon: const Icon(Icons.person),
+            onPressed: () {}, // Add your desired behavior for the user icon
+          ),
+        ],
+      ),
+      body: // create a row with two text widgets
+          SingleChildScrollView(
+              child: Column(children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: const [
+              Text("Add Your Photo +"),
+              Text("I need help inspiration"),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: UserPrompt(
+                  inputData: widget.inputData,
+                  onInputDataChanged: (newInputData) {
+                    setState(() {
+                      widget.inputData = newInputData;
+                    });
+                  },
+                ),
+              )
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: SizedBox(
+            width: double.infinity,
+            child: Row(
+              children: const [
+                Text("Aspect Ratio : "),
+                AspectRatio(),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            children: [
+              ImageSlider(),
+              Text(isLoading ? "Loading..." : "false"),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Container(
+            width: double.infinity,
+            color: Colors.transparent,
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                var imageUrl = await fetchImages(widget.inputData);
+                Navigator.of(context).push(
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation, secondaryAnimation) =>
+                        NewPage(
+                      key: const Key('newPage'),
+                      imageUrl: imageUrl,
+                      inputData: widget.inputData,
+                      images: fetchedImages,
+                      updateImagesList: updateImagesList,
+                    ),
+                    transitionsBuilder:
+                        (context, animation, secondaryAnimation, child) {
+                      var begin = const Offset(1.0, 0.0);
+                      var end = Offset.zero;
+                      var curve = Curves.ease;
+                      var tween = Tween(begin: begin, end: end)
+                          .chain(CurveTween(curve: curve));
+                      return SlideTransition(
+                        position: animation.drive(tween),
+                        child: child,
+                      );
+                    },
+                  ),
+                );
+              },
+              style: OutlinedButton.styleFrom(
+                primary: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                backgroundColor: Colors.black,
+                side: const BorderSide(color: Colors.black, width: 0),
+                shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10))),
+              ),
+              icon: const Icon(Icons.add),
+              label: const Text('Create'),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 0),
+          child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              width: double.infinity,
+              color: Color.fromARGB(210, 230, 227, 229),
               child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: const [
-                          Text("Add Your Photo +"),
-                          Text("I need help inspiration"),
-                          //button on press  await fetchImages(widget.inputData);
-                        ]),
-
-                    const SizedBox(height: 10),
-
-                    Row(
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 2, vertical: 13),
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: UserPrompt(
-                            inputData: widget.inputData,
-                            onInputDataChanged: (newInputData) {
-                              setState(() {
-                                widget.inputData = newInputData;
-                              });
-                            },
-                          ),
-                        )
-                        // Text(widget.inputData)
-                        //images array
-                        // Text("images: $images")
+                      children: const [
+                        Text(
+                          "Prompt Inspirations",
+                          style: TextStyle(
+                              fontFamily: "Poppins",
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: Row(children: const [
-                        Text("Aspect Ratio : "),
-                        AspectRatio(),
-                      ]),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    Row(children: [
-                      ImageSlider(),
-                      Text(isLoading ? "Loading..." : "false"),
-                    ]),
-                    const SizedBox(height: 10),
-                    // Full width button
-                    Container(
-                      width: double.infinity,
-                      color: Colors.transparent,
-                      child: OutlinedButton.icon(
-                          onPressed: () async {
-                            var imageUrl = await fetchImages(widget.inputData);
-                            //route to new page without animation
-                            // Navigator.of(context).push(
-                            //   MaterialPageRoute(
-                            //     builder: (context) => NewPage(
-                            //       //key
-                            //       key: const Key('newPage'),
-                            //       imageUrl: imageUrl,
-                            //       //is the image loading
-                            //       isLoading: isLoading,
-
-                            //       //the list of images
-                            //     ),
-                            //   ),
-                            // );
-
-                            Navigator.of(context).push(
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) =>
-                                        NewPage(
-                                  //key
-                                  key: const Key('newPage'),
-                                  imageUrl: imageUrl,
-                                  //is the image loading
-                                  images: images,
-                                  updateImagesList: updateImagesList,
-
-                                  //the list of images
-                                ),
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
-                                  var begin = const Offset(1.0, 0.0);
-                                  var end = Offset.zero;
-                                  var curve = Curves.ease;
-
-                                  var tween = Tween(begin: begin, end: end)
-                                      .chain(CurveTween(curve: curve));
-
-                                  return SlideTransition(
-                                    position: animation.drive(tween),
-                                    child: child,
-                                  );
-                                },
-                              ),
+                  ),
+                  SizedBox(
+                    height: 300,
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                      ),
+                      itemCount: fetchedImages.length,
+                      itemBuilder: (context, index) {
+                        return InkWell(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return Dialog(
+                                  child: Stack(
+                                    children: [
+                                      Positioned.fill(
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          child: Image.network(
+                                            fetchedImages[index]['url']!,
+                                            fit: BoxFit.cover,
+                                            height: 400,
+                                            width: double.infinity,
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 8,
+                                        right: 8,
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Colors.white,
+                                            ),
+                                            child: Icon(
+                                              Icons.close,
+                                              color: Colors.black,
+                                              size: 24,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const SizedBox(height: 180),
+                                          Padding(
+                                            padding:
+                                                EdgeInsets.fromLTRB(4, 4, 3, 3),
+                                            child: Center(
+                                              child: Text(
+                                                fetchedImages[index]['prompt']!,
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.normal,
+                                                  fontFamily: 'Poppins',
+                                                  fontSize: 13,
+                                                ),
+                                                maxLines: 4,
+                                                overflow: TextOverflow.ellipsis,
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 16),
+                                          TextButton(
+                                            onPressed: () {
+                                              // Perform some action
+                                            },
+                                            child: const Text('Try This'),
+                                            style: TextButton.styleFrom(
+                                              backgroundColor: Colors.white,
+                                              primary: Colors.black,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 24),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
                             );
                           },
-                          //styles for the button
-                          style: OutlinedButton.styleFrom(
-                            primary: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 15, vertical: 10),
-                            backgroundColor: Colors.black,
-                            side:
-                                const BorderSide(color: Colors.black, width: 0),
-                            shape: const RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(10))),
-                          ),
-                          icon: const Icon(Icons.add),
-                          label: const Text('Create')),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    Container(
-                        width: double.infinity,
-                        color: Colors.transparent,
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: const [
-                                Text(
-                                  "Prompt Inspirations",
-                                  style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold),
+                          child: SizedBox(
+                            height: 350,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Container(
+                                      width: double.infinity,
+                                      height:
+                                          250, // adjust to desired image height
+                                      child: Image.network(
+                                        fetchedImages[index]['url']!,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                //render all the images from the firestore
+                                const SizedBox(height: 8),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 0,
+                                  ),
+                                  child: Text(
+                                    fetchedImages[index]['prompt']!,
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.normal,
+                                      fontFamily: 'Poppins',
+                                      fontSize: 12,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
                               ],
                             ),
-                            SizedBox(
-                              // height: 300,
-                              //space between the images and the button
-
-                              //cover the screen available
-                              height: MediaQuery.of(context).size.height - 500,
-                              child: GridView.builder(
-                                  gridDelegate:
-                                      const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 2),
-                                  itemCount: images.length,
-                                  itemBuilder: (context, index) {
-                                    return Image.network(images[index]);
-                                  }),
-                            ),
-                          ],
-                        )),
-                  ])),
-        ));
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              )),
+        ),
+      ])),
+    );
   }
 }
 
