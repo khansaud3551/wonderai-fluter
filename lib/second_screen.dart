@@ -328,6 +328,7 @@ class _SecondScreenState extends State<SecondScreen> {
                               context: context,
                               builder: (BuildContext context) {
                                 return Dialog(
+                                  backgroundColor: Colors.transparent,
                                   child: Stack(
                                     children: [
                                       Positioned.fill(
@@ -365,7 +366,7 @@ class _SecondScreenState extends State<SecondScreen> {
                                       Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const SizedBox(height: 180),
+                                          const SizedBox(height: 200),
                                           Padding(
                                             padding:
                                                 EdgeInsets.fromLTRB(4, 4, 3, 3),
@@ -378,13 +379,13 @@ class _SecondScreenState extends State<SecondScreen> {
                                                   fontFamily: 'Poppins',
                                                   fontSize: 13,
                                                 ),
-                                                maxLines: 4,
-                                                overflow: TextOverflow.ellipsis,
+                                                // maxLines: 4,
+                                                // overflow: TextOverflow.ellipsis,
                                                 textAlign: TextAlign.center,
                                               ),
                                             ),
                                           ),
-                                          const SizedBox(height: 16),
+                                          const SizedBox(height: 0),
                                           TextButton(
                                             onPressed: () {
                                               // Perform some action
