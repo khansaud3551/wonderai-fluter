@@ -185,281 +185,297 @@ class _SecondScreenState extends State<SecondScreen> {
       ),
       body: // create a row with two text widgets
           SingleChildScrollView(
+              //vertical scroll
+              scrollDirection: Axis.vertical,
               child: Column(children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text("Add Your Photo +"),
-              Text("I need help inspiration"),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: UserPrompt(
-                  inputData: widget.inputData,
-                  onInputDataChanged: (newInputData) {
-                    setState(() {
-                      widget.inputData = newInputData;
-                    });
-                  },
-                ),
-              )
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: SizedBox(
-            width: double.infinity,
-            child: Row(
-              children: const [
-                Text("Aspect Ratio : "),
-                AspectRatio(),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Row(
-            children: [
-              ImageSlider(),
-              Text(isLoading ? "Loading..." : "false"),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Container(
-            width: double.infinity,
-            color: Colors.transparent,
-            child: OutlinedButton.icon(
-              onPressed: () async {
-                var imageUrl = await fetchImages(widget.inputData);
-                Navigator.of(context).push(
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) =>
-                        NewPage(
-                      key: const Key('newPage'),
-                      imageUrl: imageUrl,
-                      inputData: widget.inputData,
-                      images: fetchedImages,
-                      updateImagesList: updateImagesList,
-                    ),
-                    transitionsBuilder:
-                        (context, animation, secondaryAnimation, child) {
-                      var begin = const Offset(1.0, 0.0);
-                      var end = Offset.zero;
-                      var curve = Curves.ease;
-                      var tween = Tween(begin: begin, end: end)
-                          .chain(CurveTween(curve: curve));
-                      return SlideTransition(
-                        position: animation.drive(tween),
-                        child: child,
-                      );
-                    },
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      Text("Add Your Photo +"),
+                      Text("I need help inspiration"),
+                    ],
                   ),
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                primary: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                backgroundColor: Colors.black,
-                side: const BorderSide(color: Colors.black, width: 0),
-                shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10))),
-              ),
-              icon: const Icon(Icons.add),
-              label: const Text('Create'),
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 0),
-          child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              width: double.infinity,
-              color: Color.fromARGB(210, 230, 227, 229),
-              child: Column(
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 2, vertical: 13),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text(
-                          "Prompt Inspirations",
-                          style: TextStyle(
-                              fontFamily: "Poppins",
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: UserPrompt(
+                          inputData: widget.inputData,
+                          onInputDataChanged: (newInputData) {
+                            setState(() {
+                              widget.inputData = newInputData;
+                            });
+                          },
                         ),
+                      )
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Row(
+                      children: const [
+                        Text("Aspect Ratio : "),
+                        AspectRatio(),
                       ],
                     ),
                   ),
-                  SizedBox(
-                    height: 300,
-                    child: GridView.builder(
-                      shrinkWrap: true,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Row(
+                    children: [
+                      ImageSlider(),
+                      Text(isLoading ? "Loading..." : "false"),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Container(
+                    width: double.infinity,
+                    color: Colors.transparent,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        var imageUrl = await fetchImages(widget.inputData);
+                        Navigator.of(context).push(
+                          PageRouteBuilder(
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    NewPage(
+                              key: const Key('newPage'),
+                              imageUrl: imageUrl,
+                              inputData: widget.inputData,
+                              images: fetchedImages,
+                              updateImagesList: updateImagesList,
+                            ),
+                            transitionsBuilder: (context, animation,
+                                secondaryAnimation, child) {
+                              var begin = const Offset(1.0, 0.0);
+                              var end = Offset.zero;
+                              var curve = Curves.ease;
+                              var tween = Tween(begin: begin, end: end)
+                                  .chain(CurveTween(curve: curve));
+                              return SlideTransition(
+                                position: animation.drive(tween),
+                                child: child,
+                              );
+                            },
+                          ),
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        primary: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 10),
+                        backgroundColor: Colors.black,
+                        side: const BorderSide(color: Colors.black, width: 0),
+                        shape: const RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(10))),
                       ),
-                      itemCount: fetchedImages.length,
-                      itemBuilder: (context, index) {
-                        return InkWell(
-                          onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return Dialog(
-                                  backgroundColor: Colors.transparent,
-                                  child: Stack(
-                                    children: [
-                                      Positioned.fill(
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          child: Image.network(
-                                            fetchedImages[index]['url']!,
-                                            fit: BoxFit.cover,
-                                            height: 400,
-                                            width: double.infinity,
-                                          ),
-                                        ),
-                                      ),
-                                      Positioned(
-                                        top: 8,
-                                        right: 8,
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: Colors.white,
-                                            ),
-                                            child: Icon(
-                                              Icons.close,
-                                              color: Colors.black,
-                                              size: 24,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const SizedBox(height: 200),
-                                          Padding(
-                                            padding:
-                                                EdgeInsets.fromLTRB(4, 4, 3, 3),
-                                            child: Center(
-                                              child: Text(
-                                                fetchedImages[index]['prompt']!,
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.normal,
-                                                  fontFamily: 'Poppins',
-                                                  fontSize: 13,
-                                                ),
-                                                // maxLines: 4,
-                                                // overflow: TextOverflow.ellipsis,
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 0),
-                                          TextButton(
-                                            onPressed: () {
-                                              // Perform some action
-                                            },
-                                            child: const Text('Try This'),
-                                            style: TextButton.styleFrom(
-                                              backgroundColor: Colors.white,
-                                              primary: Colors.black,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 24),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                          child: SizedBox(
-                            height: 350,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Container(
-                                      width: double.infinity,
-                                      height:
-                                          250, // adjust to desired image height
-                                      child: Image.network(
-                                        fetchedImages[index]['url']!,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 0,
-                                  ),
-                                  child: Text(
-                                    fetchedImages[index]['prompt']!,
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.normal,
-                                      fontFamily: 'Poppins',
-                                      fontSize: 12,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                  ),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Create'),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 0),
+                  child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      width: double.infinity,
+                      color: Color.fromARGB(210, 230, 227, 229),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 2, vertical: 13),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: const [
+                                Text(
+                                  "Prompt Inspirations",
+                                  style: TextStyle(
+                                      fontFamily: "Poppins",
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w600),
                                 ),
                               ],
                             ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              )),
-        ),
-      ])),
+                          SizedBox(
+                            height: 300,
+                            child: GridView.builder(
+                              shrinkWrap: true,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                              ),
+                              itemCount: fetchedImages.length,
+                              itemBuilder: (context, index) {
+                                return InkWell(
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return Dialog(
+                                          backgroundColor: Colors.transparent,
+                                          child: Stack(
+                                            children: [
+                                              Positioned.fill(
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  child: Image.network(
+                                                    fetchedImages[index]
+                                                        ['url']!,
+                                                    fit: BoxFit.cover,
+                                                    height: 400,
+                                                    width: double.infinity,
+                                                  ),
+                                                ),
+                                              ),
+                                              Positioned(
+                                                top: 8,
+                                                right: 8,
+                                                child: GestureDetector(
+                                                  onTap: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      color: Colors.white,
+                                                    ),
+                                                    child: Icon(
+                                                      Icons.close,
+                                                      color: Colors.black,
+                                                      size: 24,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const SizedBox(height: 200),
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsets.fromLTRB(
+                                                            4, 4, 3, 3),
+                                                    child: Center(
+                                                      child: Text(
+                                                        fetchedImages[index]
+                                                            ['prompt']!,
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.normal,
+                                                          fontFamily: 'Poppins',
+                                                          fontSize: 13,
+                                                        ),
+                                                        // maxLines: 4,
+                                                        // overflow: TextOverflow.ellipsis,
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 0),
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      // Perform some action
+                                                    },
+                                                    child:
+                                                        const Text('Try This'),
+                                                    style: TextButton.styleFrom(
+                                                      backgroundColor:
+                                                          Colors.white,
+                                                      primary: Colors.black,
+                                                      padding: const EdgeInsets
+                                                              .symmetric(
+                                                          horizontal: 24),
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(12),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                  child: SizedBox(
+                                    height: 350,
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            child: Container(
+                                              width: double.infinity,
+                                              height:
+                                                  250, // adjust to desired image height
+                                              child: Image.network(
+                                                fetchedImages[index]['url']!,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 0,
+                                          ),
+                                          child: Text(
+                                            fetchedImages[index]['prompt']!,
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.normal,
+                                              fontFamily: 'Poppins',
+                                              fontSize: 12,
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      )),
+                ),
+              ])),
     );
   }
 }
